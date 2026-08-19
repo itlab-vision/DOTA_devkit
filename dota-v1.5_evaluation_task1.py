@@ -267,11 +267,11 @@ def voc_eval(detpath,
 
     # compute precision recall
 
-    print('check fp:', fp)
-    print('check tp', tp)
+    # print('check fp:', fp)
+    # print('check tp', tp)
 
 
-    print('npos num:', npos)
+    # print('npos num:', npos)
     fp = np.cumsum(fp)
     tp = np.cumsum(tp)
 
