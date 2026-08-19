@@ -10,6 +10,7 @@
     search for PATH_TO_BE_CONFIGURED to config the paths
     Note, the evaluation is on the large scale images
 """
+import argparse
 import xml.etree.ElementTree as ET
 import os
 #import cPickle
@@ -17,6 +18,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 import polyiou
 from functools import partial
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='Evaluate DOTA v1.0 Task1 detection results.'
+    )
+    parser.add_argument(
+        '--detpath',
+        type=str,
+        required=True,
+        help='Path pattern to detection result files')
+    parser.add_argument(
+        '--annopath',
+        type=str,
+        required=True,
+        help='Path pattern to ground truth annotation files')
+    parser.add_argument(
+        '--imagesetfile',
+        type=str,
+        required=True,
+        help='Path to imageset file containing list of image names')
+    return parser.parse_args()
+
 
 def parse_gt(filename):
     """
@@ -148,7 +172,7 @@ def voc_eval(detpath,
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
         bbox = np.array([x['bbox'] for x in R])
-        difficult = np.array([x['difficult'] for x in R]).astype(np.bool)
+        difficult = np.array([x['difficult'] for x in R]).astype(bool)
         det = [False] * len(R)
         npos = npos + sum(~difficult)
         class_recs[imagename] = {'bbox': bbox,
@@ -253,11 +277,11 @@ def voc_eval(detpath,
 
     # compute precision recall
 
-    print('check fp:', fp)
-    print('check tp', tp)
+    # print('check fp:', fp)
+    # print('check tp', tp)
 
 
-    print('npos num:', npos)
+    # print('npos num:', npos)
     fp = np.cumsum(fp)
     tp = np.cumsum(tp)
 
@@ -269,22 +293,13 @@ def voc_eval(detpath,
 
     return rec, prec, ap
 
+
 def main():
+    args = parse_args()
+    detpath = args.detpath
+    annopath = args.annopath
+    imagesetfile = args.imagesetfile
 
-    # ##TODO: wrap the code in the main
-    # detpath = r'/home/dingjian/Documents/Research/experiments/light_head_faster_rotbox_best_point/Task1_results_0.1_nms_epoch18/results/Task1_{:s}.txt'
-    # annopath = r'/home/dingjian/code/DOTA/DOTA/media/OrientlabelTxt-utf-8/{:s}.txt'# change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
-    # imagesetfile = r'/home/dingjian/code/DOTA/DOTA/media/testset.txt'
-    # classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-    #             'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
-
-    detpath = r'PATH_TO_BE_CONFIGURED/Task1_{:s}.txt'
-    annopath = r'PATH_TO_BE_CONFIGURED/{:s}.txt' # change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
-    imagesetfile = r'PATH_TO_BE_CONFIGURED/valset.txt'
-
-    # For DOTA-v1.5
-    # classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-    #             'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter', 'container-crane']
     # For DOTA-v1.0
     classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
                 'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
@@ -299,19 +314,14 @@ def main():
              ovthresh=0.5,
              use_07_metric=True)
         map = map + ap
-        #print('rec: ', rec, 'prec: ', prec, 'ap: ', ap)
         print('ap: ', ap)
         classaps.append(ap)
 
-        # umcomment to show p-r curve of each category
-        # plt.figure(figsize=(8,4))
-        # plt.xlabel('recall')
-        # plt.ylabel('precision')
-        # plt.plot(rec, prec)
-       # plt.show()
     map = map/len(classnames)
     print('map:', map)
     classaps = 100*np.array(classaps)
     print('classaps: ', classaps)
+
+
 if __name__ == '__main__':
     main()
